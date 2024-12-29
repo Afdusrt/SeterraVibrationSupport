@@ -1,0 +1,106 @@
+// ==UserScript==
+// @name         Seterra Haptic Feedback
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  Send a message to Node.js server to vibrate the controller when data-current-question-id changes
+// @author       Afdusrt and artifical intelligence
+// @match        *://*/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Connect to the WebSocket server
+    const socket = new WebSocket('ws://127.0.0.1:8080/');
+
+    // Listen for the connection to be open
+    socket.addEventListener('open', function (event) {
+        console.log('Connected to WebSocket server');
+    });
+
+    // Listen for messages from the server
+    socket.addEventListener('message', function (event) {
+        console.log('Message from server:', event.data);
+    });
+
+    // Listen for errors
+    socket.addEventListener('error', function (event) {
+        console.error('WebSocket error:', event);
+    });
+
+    // Listen for the connection to close
+    socket.addEventListener('close', function (event) {
+        console.log('Disconnected from WebSocket server');
+    });
+
+    // Function to send a message to the server
+    function sendMessage(duration) {
+        const message = JSON.stringify({ duration: duration });
+        socket.send(message);
+        console.log('Sent message to server:', message);
+    }
+
+    // Listen for the specific keystroke (e.g., 'v' key)
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'v') { // Change 'v' to any key you prefer
+            sendMessage(550); // Change 1000 to your desired duration in milliseconds
+        }
+    });
+
+    // Global state variables
+    let areaIds = [];
+    let observer = null; // Define observer as a global variable
+
+    // Function to find area IDs
+    function findroutemakeareaids() {
+        // Find the section element containing the order
+        const sectionElement = document.querySelector('section[data-area-ids]');
+        if (!sectionElement) {
+            console.error('No section element with data-area-ids found');
+            return;
+        }
+
+        // Get the order of area IDs
+        areaIds = sectionElement.getAttribute('data-area-ids').split(',');
+
+        // Log the area IDs to the console for debugging
+        console.log('Area IDs found:', areaIds);
+    }
+
+    // Function to setup MutationObserver
+    function setupMutationObserver() {
+        const headerElement = document.querySelector('div[data-qa="game-map-header"]');
+        if (!headerElement) {
+            console.error('No header element found');
+            return;
+        }
+
+        observer = new MutationObserver((mutationsList) => {
+            for (const mutation of mutationsList) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'data-current-question-id') {
+                    // Get the new current question ID
+                    const currentQuestionId = headerElement.getAttribute('data-current-question-id');
+
+                    // Check if the current question ID matches any area ID
+                    if (areaIds.includes(currentQuestionId)) {
+                        // Send a message to vibrate the controller
+                        sendMessage(550); // Change 1000 to your desired duration in milliseconds
+                    }
+                }
+            }
+        });
+
+        // Observe changes to the data-current-question-id attribute
+        observer.observe(headerElement, {
+            attributes: true,
+            attributeFilter: ['data-current-question-id']
+        });
+    }
+
+    // Call the function to find area IDs
+    findroutemakeareaids();
+
+    // Call the function to setup the MutationObserver
+    setupMutationObserver();
+})();
