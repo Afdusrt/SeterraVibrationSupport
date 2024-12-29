@@ -11,11 +11,12 @@ Node.js
 Tested on node.js 22.12.0 but others should work.
   you will also need ws: a Node.js WebSocket library (npm install ws)
 
+Tampermonkey addon for your browser.
+  I have not tested other monkeys.
+
 # Usage.
 
 Source code is the release.
-
-Download tampermonkey for your browser. (I have not tested other monkeys)
 
 Download the scripts, and save them to a folder. (make sure they are all* in the same directory)
 
